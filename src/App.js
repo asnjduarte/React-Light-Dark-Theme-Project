@@ -2,6 +2,7 @@ import "./App.css";
 import { ThemeProvider, useTheme } from "./ThemeContext";
 import Switch from "./Switch";
 import { useState } from "react";
+import { useEffect } from "react";
 
 
 const Title = ({ children }) => {
@@ -62,6 +63,34 @@ const Page = () => {
 };
 
 function App() {
+  /*Fetching data*/
+  const [user, setUser] = useState([]);
+  const fetchData = () => {
+    fetch("https://randomuser.me/api/?results=1")
+    .then((response) => response.json())
+    .then(data => setUser(data));
+  }
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const FetchedData = () => {
+    return Object.keys(user).length > 0 ? (
+      <div style={{padding: "40px"}}>
+        <h1>Customer data</h1>
+        <h2>Name: {user.results[0].name.first}</h2>
+        <img src={user.results[0].picture.large} alt=""/>
+      </div>
+    ) : (
+      <h1>Data pending...</h1>
+  
+    );
+  }
+
+  /*Fetching data end*/
+
+  /*Managing useState exercise*/
   const [giftCard, setGiftCard] = useState({
     firstName: "Jennifer",
     lastName: "Smith",
@@ -98,6 +127,7 @@ function App() {
       </div>
     );
   }
+  /*Managing useState exercise*/
   
   const { theme } = useTheme();
   return (
@@ -110,6 +140,7 @@ function App() {
       <Header />
       <Page />
       <GiftCard/>
+      <FetchedData/>
     </div>
   );
 }
