@@ -1,10 +1,103 @@
 import "./App.css";
 import { ThemeProvider, useTheme } from "./ThemeContext";
 import Switch from "./Switch";
-import { useState } from "react";
-import { useEffect } from "react";
-import { useRef } from "react";
+import { useState, useEffect, useRef } from "react";
+import { RadioGroup, RadioOption } from "./Radio";
+import FeedbackForm from "./Feedback/FeebackForm";
 
+
+
+/*Render props*/
+const DataFetcher = ({render,url}) => {
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    if(url.includes("desserts")) {
+      setData(["cake", "ice cream", "pie", "brownie"]);
+    } else {
+      setData(["water", "soda", "juice"]);
+    }
+  }, []);
+
+  return render(data);
+};
+
+const DessertsCount = () => {
+  return (
+    <DataFetcher
+      url="https://littlelemon/desserts"
+      render={(data) => <p>{data.length} desserts</p>}
+      />
+  );
+};
+
+const DrinksCount = () => {
+  return (
+    <DataFetcher
+    url="https://littlelemon/drinks"
+    render={(data) => <h3>{data.length} drinks</h3>}
+    />
+  );
+};
+/*End Render props*/
+
+
+/*create HOC for cursor position*/
+const withMousePosition  = (WrappedComponent) => {
+  return (props) => {
+    const [mousePosition, setMousePosition] = useState ({
+      x:0,
+      y:0,
+    });
+
+    useEffect(() => {
+      const handleMousePositionChange = (e) => {
+        setMousePosition({
+          x: e.clientX,
+          y: e.clientY,
+        });
+      };
+
+      window.addEventListener("mousemove", handleMousePositionChange);
+
+      return () => {
+        window.removeEventListener("mousemove", handleMousePositionChange);
+      }
+    },[]);
+
+    return<WrappedComponent {...props} mousePosition={mousePosition}/>;
+  };
+};
+
+const PointMouseLogger = ({ mousePosition }) => {
+  if(!mousePosition) {
+    return null;
+  }
+  return (
+    <p>
+      ({mousePosition.x}, {mousePosition.y})
+    </p>
+  )
+}
+
+const PanelMouseLogger = ({mousePosition}) => {
+  if(!mousePosition) {
+    return null;
+  }
+  return (
+    <div className="BasicTracker">
+      <p>Mouse position:</p>
+      <div className="Row">
+        <span>x: {mousePosition.x}</span>
+        <span>y: {mousePosition.y}</span>
+      </div>
+    </div>
+  )
+}
+
+const PanelMouseTracker = withMousePosition(PanelMouseLogger);
+const PointMouseTracker = withMousePosition(PointMouseLogger);
+/*create HOC for cursor position*/
 
 const Title = ({ children }) => {
   const { theme } = useTheme();
@@ -64,6 +157,46 @@ const Page = () => {
 };
 
 function App() {
+  const Button = ({ children, ...rest }) => (
+    <button onClick={() => console.log("ButtonClick")} {...rest}>
+      {children}
+    </button>
+  );
+  
+  const withClick = (Component) => {
+    const handleClick = () => {
+      console.log("WithClick");
+    };
+  
+    return (props) => {
+      return <Component onClick={handleClick} {...props} />;
+    };
+  };
+  
+  const MyButton = withClick(Button);
+  /*writing the first test for your form*/
+  const handleSubmit = () => {
+    console.log("Form submitted");
+  };
+  /*writing the first test for your form*/
+  /*Build a radio button exercse*/
+  const [selected, setSelected] = useState("");
+  const RadioButtonQuestion = () => {
+    return (
+      <div className="App">
+        <h2>How did you hear about Little Lemon?</h2>
+        <RadioGroup onChange={setSelected} selected={selected}>
+          <RadioOption value="social_media">Social Media</RadioOption>
+          <RadioOption value="friends">Friends</RadioOption>
+          <RadioOption value="advertising">Advertising</RadioOption>
+          <RadioOption value="other">Other</RadioOption>
+        </RadioGroup>
+        <button disabled={!selected}>Submit</button>
+      </div>
+    )
+  }
+
+  /*End build a radio button exercse*/
   /*Create custom hook exercise*/
   
   const [day, setDay] = useState("Monday");
@@ -185,6 +318,13 @@ function App() {
       <GiftCard/>
       <FetchedData/>
       <NextDay/>
+      <RadioButtonQuestion/>
+      <PanelMouseTracker/>
+      <PointMouseTracker/>
+      <DessertsCount />
+      <DrinksCount />
+      <FeedbackForm onSubmit={handleSubmit}/>
+      <MyButton onClick={() => console.log("AppClick")}>Submit</MyButton>
     </div>
   );
 }
